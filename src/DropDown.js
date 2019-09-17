@@ -1,6 +1,19 @@
 import React, { Component } from 'react';
+import { DropDownItem } from './DropDownItem';
 
 class DropDown extends Component {
+  state = {
+    isOpen: false,
+  };
+
+  componentDidMount() {
+    document.addEventListener('click', this.closeOnOutsideClick);
+  }
+
+  componentWillUnmount() {
+    document.removeEventListener('click', this.closeOnOutsideClick);
+  }
+
   componentDidUpdate(prevProps, prevState) {
     const { options, onChange } = this.props;
 
@@ -9,38 +22,54 @@ class DropDown extends Component {
     }
   }
 
+  closeOnOutsideClick = ({ target }) => {
+    if (!target.closest('.dropdown')) {
+      this.setState({ isOpen: false });
+    }
+  };
+
+  toggleDropDown = () => {
+    this.setState(({ isOpen }) => ({ isOpen: !isOpen }));
+  };
+
+  selectItem = (value) => {
+    const { onChange } = this.props;
+
+    onChange(value);
+    this.setState({ isOpen: false });
+  };
+
   render() {
     const {
       options,
       value,
-      onChange,
     } = this.props;
+    const { isOpen } = this.state;
+
+    const menuClassName = `dropdown-menu ${isOpen ? 'show' : ''}`;
 
     return (
-      <div>
-        <span>
+      <div className="dropdown">
+        <button
+          className="btn btn-primary dropdown-toggle"
+          type="button"
+          onClick={this.toggleDropDown}
+        >
           Value:
           {' '}
           {value}
-        </span>
+        </button>
 
-        <ul>
-          {options.map(({ label, value: optionValue }) => {
-            const selected = value === optionValue;
-
-            return (
-              <li key={optionValue}>
-                <button
-                  type="button"
-                  onClick={() => onChange(optionValue)}
-                >
-                  {label}
-                  {' '}
-                  {selected && '✅'}
-                </button>
-              </li>
-            );
-          })}
+        <ul className={menuClassName}>
+          {options.map(({ label, value: optionValue }) => (
+            <DropDownItem
+              key={optionValue}
+              value={optionValue}
+              selected={value === optionValue}
+              label={label}
+              onSelect={this.selectItem}
+            />
+          ))}
         </ul>
       </div>
     );
